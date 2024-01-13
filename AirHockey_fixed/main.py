@@ -11,8 +11,11 @@ import serial
 import serial.tools.list_ports
 import struct
 
-#http://lense.institutoptique.fr/mine/python-pyserial-premier-script/
+# Ressources I used for the library serial :
+# http://lense.institutoptique.fr/mine/python-pyserial-premier-script/
 
+# Carry out a quick test to make sure the serial connection is available before to start the game
+#Initialize the serial connection, the picked characteristics have to match with the one on your main.c (LPC804)
 ser = serial.Serial(port='COM6', baudrate=115200,bytesize = 8,parity='N', stopbits=1, timeout=None,  write_timeout=None, xonxoff=False, rtscts=False, dsrdtr=False)
 print("Push BP2 to start the game")
 read_bytes = ser.read(1)
@@ -20,17 +23,16 @@ read_bytes = ser.read(1)
 print(" read_bytes decodé = ", read_bytes.decode())
 ser.close()
 
+#Initialize again the serial connection, the picked characteristics have to match with the one on your main.c (LPC804)
 ser = serial.Serial(port='COM6', baudrate=115200,bytesize = 8,parity='N', stopbits=1, timeout=None,  write_timeout=None, xonxoff=False, rtscts=False, dsrdtr=False)
 
+#The python part for moving the paddle is at the line 360
 
 
 def bytes_to_int(byte1, byte2):
-    # Créez une séquence de deux octets à partir de byte1 et byte2
+    # Merge the 2 byte1 and byte2 to find back the data from the sensor
     bytes_sequence = struct.pack('BB', byte1, byte2)
-
-    # Déballez la séquence en un entier (utilisez 'H' pour un entier non signé sur 2 octets)
     result = struct.unpack('>H', bytes_sequence)[0]
-
     return result
 
 
@@ -369,9 +371,9 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
                     
                     if read_bytes.decode() == 'd':
                         read_bytes = ser.read(2)
-                        entier_c = bytes_to_int(read_bytes[1], read_bytes[0]) #decoder en regroupant les 2 octets
+                        entier_c = bytes_to_int(read_bytes[1], read_bytes[0]) #Decrypt by merging the 2 bytes
                         print("entier c D= ", entier_c)
-                        paddle1.move_sensor(entier_c) #déplacer le paddle en fonction de la distance mesurée par le capteur
+                        paddle1.move_sensor(entier_c) #move the paddle according to the decrypted distance from the sensor
                         
 
                     elif read_bytes.decode() == 'g':
@@ -379,13 +381,13 @@ def game_loop(speed, player1_color, player2_color, background_color, player_1_na
                         #    pass
                         read_bytes = ser.read(2)
 
-                        entier_c = bytes_to_int(read_bytes[1], read_bytes[0]) #decoder en regroupant les 2 octets
+                        entier_c = bytes_to_int(read_bytes[1], read_bytes[0]) #Decrypt by merging the 2 bytes
                         print("entier c G= ", entier_c)
-                        paddle2.move_sensor(entier_c) #déplacer le paddle en fonction de la distance mesurée par le capteur
+                        paddle2.move_sensor(entier_c) #move the paddle according to the decrypted distance from the sensor
                     else:
                         pass
             else:
-                #VIDER le port série quand on ne le lit pas pour éviter l'accumulation
+                #Drain the serial port when not reading to prevent cumulation
                 ser.reset_input_buffer()  # Clear the buffer
                 pass
 
