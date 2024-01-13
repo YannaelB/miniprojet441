@@ -10,8 +10,6 @@
 #include "adc.h"
 #include <stdio.h>
 
-
-#define BP1 LPC_GPIO_PORT->B0[13]
 #define BP2 LPC_GPIO_PORT->B0[12]
 
 
@@ -24,7 +22,7 @@ int main(void) {
 	int i;
 
 
-// Initialisation de la liaison série
+// Initialize the serial connection
     LPC_PWRD_API->set_fro_frequency(30000); //set clock frequency
     LPC_SYSCON->SYSAHBCLKCTRL0 |= GPIO |IOCON|SWM| UART0; // Enable clocks to relevant peripherals
     LPC_GPIO_PORT->DIR0 = (1<<17);
@@ -33,7 +31,7 @@ int main(void) {
     LPC_SYSCON->UART0CLKSEL = FCLKSEL_FRO_CLK; // Select frg0clk as the source for fclk0 (to UART0)
     LPC_SYSCON->PRESETCTRL0 &= (UART0_RST_N); //reset USART0
     LPC_SYSCON->PRESETCTRL0 |= ~(UART0_RST_N); //reset USART0
-    LPC_USART0->BRG = (15000000.0/((LPC_USART0->OSR+1)*115200) - 1 +0.5);
+    LPC_USART0->BRG = (15000000.0/((LPC_USART0->OSR+1)*115200) - 1 +0.5); //Baud 115200
     //LPC_USART0->CFG = DATA_LENG_8|PARITY_EVEN|STOP_BIT_1; //8bits transmission, 1 bit de stop et 1 bit de parité
     LPC_USART0->CFG = DATA_LENG_8|PARITY_NONE|STOP_BIT_1; //8bits transmission, 1 bit de stop et 0 bit de parité
     LPC_USART0->STAT = 0xFFFF; // Clear any pending flags, just in case
@@ -44,7 +42,7 @@ int main(void) {
     NVIC_EnableIRQ(UART0_IRQn);
 
 
-//Initialisation du convertisseur Aalogique/Numérique
+//Initialize  Analogic/Digital Converter ADC
     // Step 1. Power up and reset the ADC, and enable clocks to peripherals
 	LPC_SYSCON->PDRUNCFG &= ~(ADC_PD); //power the ADC
 	LPC_SYSCON->SYSAHBCLKCTRL0 |= (ADC | GPIO0 | GPIO_INT | IOCON | SWM); //enable the clock
@@ -59,9 +57,9 @@ int main(void) {
 	LPC_IOCON->PIO0_15 = 0; //disable pull-up and pull-down
 	LPC_IOCON->PIO0_10 = 0; //disable pull-up and pull-down
 
-	LPC_ADC->SEQA_CTRL &= ~(1<<31); // arret du convertisseur
-	LPC_ADC->SEQB_CTRL &= ~(1<<31); // arret du convertisseur
-	//LPC_ADC->SEQA_CTRL |=  (1<<31); //démarrage du convertisseur
+	LPC_ADC->SEQA_CTRL &= ~(1<<31); // Stop the converter
+	LPC_ADC->SEQB_CTRL &= ~(1<<31); // Stop the converter
+	//LPC_ADC->SEQA_CTRL |=  (1<<31); //Start the converter
 	//LPC_ADC->SEQA_CTRL |= (1<<8) | (1<<27); //activate burst and channel 8
 
 
@@ -69,7 +67,7 @@ int main(void) {
 
     while (1) {
 
-    	// Infinite loop for waiting the player to start the game
+    	// Infinite loop to wait the player to start the game
     	if (previousBP2 == 0 && BP2 != 0)
 		{
 			game = 1;
@@ -98,6 +96,7 @@ int main(void) {
 
 		while(game){
 
+
 			//SENSOR G (left)
 
 			while ( ((LPC_USART0->STAT) & TXRDY) == 0 ){} //Waiting for the TX to be ready
@@ -105,9 +104,9 @@ int main(void) {
 			if (((LPC_USART0->STAT) & TXRDY) != 0){
 				LPC_USART0->TXDAT  = 'g';} //Sending letter 'g' so Python recognise which sensor is sending data
 
-			LPC_ADC->SEQA_CTRL &= ~(1<<31); // arret du convertisseur
-			LPC_ADC->SEQB_CTRL &= ~(1<<31); // arret du convertisseur
-			LPC_ADC->SEQA_CTRL |=  (1<<31); //démarrage du convertisseur
+			LPC_ADC->SEQA_CTRL &= ~(1<<31); // Stop the converter
+			LPC_ADC->SEQB_CTRL &= ~(1<<31); // Stop the converter
+			LPC_ADC->SEQA_CTRL |=  (1<<31); //Start the converter
 			LPC_ADC->SEQA_CTRL |= (1<<8) | (1<<27); //activate burst and channel 8
 
 			//for (i = 0; i < 100000; i++); //boucle de temporisation
@@ -119,7 +118,7 @@ int main(void) {
 				//printf(" SEQA_GDAT resultat = %d \n", resultat );
 			}
 			LPC_ADC->SEQA_CTRL &= ~((1<<8) | (1<<27)); //desactivate burst and channel 8
-			LPC_ADC->SEQA_CTRL &= ~(1<<31); // arret du convertisseur afin de pouvoir utiliser l'autre capteur
+			LPC_ADC->SEQA_CTRL &= ~(1<<31); // Stop the converter to be able to use the other sensor
 
 			while ( ((LPC_USART0->STAT) & TXRDY) == 0 ){} //Waiting for the TX to be ready
 
@@ -134,21 +133,19 @@ int main(void) {
 
 
 
-			// SENSOR D (right)
 
-			for (i = 0; i < 100000; i++); //boucle de temporisation
+			// SENSOR D (right)
 
 			while ( ((LPC_USART0->STAT) & TXRDY) == 0 ){} //Waiting for the TX to be ready
 
 			if (((LPC_USART0->STAT) & TXRDY) != 0){
 				LPC_USART0->TXDAT  = 'd';} //Sending letter 'd' so Python recognise which sensor is sending data
 
-			LPC_ADC->SEQA_CTRL &= ~(1<<31); // arret du convertisseur
-			LPC_ADC->SEQB_CTRL &= ~(1<<31); // arret du convertisseur
-			LPC_ADC->SEQB_CTRL |=  (1<<31); //démarrage du convertisseur
+			LPC_ADC->SEQA_CTRL &= ~(1<<31); // Stop the converter
+			LPC_ADC->SEQB_CTRL &= ~(1<<31); // Stop the converter
+			LPC_ADC->SEQB_CTRL |=  (1<<31); //Start the converter
 			LPC_ADC->SEQB_CTRL |= (1<<7) | (1<<27); //activate burst and channel 7
 
-			for (i = 0; i < 100000; i++); //boucle de temporisation
 
 			if( ((LPC_ADC->SEQB_GDAT)&(1<<31)) != 0) //bit31 sets to 1 when an A/D conversion on this channel completes.
 			{
@@ -157,7 +154,7 @@ int main(void) {
 				//printf(" SEQB_GDAT resultat = %d \n", resultat );
 			}
 			LPC_ADC->SEQB_CTRL &= ~((1<<7) | (1<<27)); //activate burst and channel 8
-			LPC_ADC->SEQB_CTRL &= ~(1<<31); // arret du convertisseur afin de pouvoir utiliser l'autre capteur
+			LPC_ADC->SEQB_CTRL &= ~(1<<31); // Stop the converter to be able to use the other sensor
 
 
 			while ( ((LPC_USART0->STAT) & TXRDY) == 0 ){} //Waiting for the TX to be ready
