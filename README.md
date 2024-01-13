@@ -1,3 +1,1 @@
-
-I recommand to use an anaconda environment with pygame and pyserial installed on it.
-Run ''main_proj.c'' on your LPC804 and then run ''main.py'' in the directory AirHockey.
+The aim of this project is to control the two paddles of a Pong game using infrared sensors. Thus, two players can compete by using their hands to control the vertical position of the paddles while viewing the game interface on Python (Pygame). To reuse this project, I recommend setting up an Anaconda environment with Pygame and Pyserial installed. Run 'main_proj.c' on your LPC804 (or another microcontroller equipped with infrared sensors and an ADC converter, though this may require some changes in the C code). Then run 'main.py' in the AirHockey directory.
